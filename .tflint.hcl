@@ -26,3 +26,11 @@ plugin "aws" {
   version = "0.35.0"
   source  = "github.com/terraform-linters/tflint-ruleset-aws"
 }
+
+# --- Modularity plugin ---
+
+plugin "modularity" {
+  enabled = true
+  version = "0.2.0"
+  source  = "github.com/OlechowskiMichal/tflint-ruleset-modularity"
+}
