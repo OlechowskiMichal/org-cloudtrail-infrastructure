@@ -96,3 +96,8 @@ tasks:
       - rm -f tofu/plan.json
       - rm -f tofu/plan.txt
       - rm -f tofu/*.tfstate*
+
+  trivy:
+    desc: Scan OpenTofu configuration for security issues
+    cmds:
+      - trivy config tofu/ --severity HIGH,CRITICAL --exit-code 1
