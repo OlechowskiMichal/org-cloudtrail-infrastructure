@@ -2,7 +2,7 @@
 
 ## Overview
 
-Standalone OpenTofu module for organization-wide AWS CloudTrail. Deploys CloudTrail with KMS encryption, S3 bucket in a security-audit account, CloudWatch log delivery and alerting, and EventBridge rules for GuardDuty/SecurityHub findings.
+Standalone OpenTofu module for organization-wide AWS CloudTrail. Deploys CloudTrail with KMS encryption, S3 bucket in a security-audit account, and CloudWatch log delivery.
 
 ## Tech Stack
 
@@ -23,9 +23,9 @@ Standalone OpenTofu module for organization-wide AWS CloudTrail. Deploys CloudTr
 ## Key Files
 
 ```text
-tofu/main.tf                    # All CloudTrail resources (KMS, S3, CloudWatch, EventBridge)
+tofu/main.tf                    # Root module orchestrating trail and bucket submodules
 tofu/variables.tf               # Input variables (org ID, account IDs, region, etc.)
-tofu/outputs.tf                 # trail_arn, kms_key_arn, bucket_name, sns topic ARN
+tofu/outputs.tf                 # trail_arn, kms_key_arn, kms_key_id, bucket_name, cloudwatch_log_group_name
 test/                           # Go/Terratest tests
 conftest.toml                   # OPA policy config
 ```
@@ -40,9 +40,6 @@ conftest.toml                   # OPA policy config
 | S3 access logging bucket | Security-audit | Audit access to CloudTrail bucket |
 | CloudWatch Log Group | Management | CloudTrail log delivery (90-day retention) |
 | IAM role + policy | Management | CloudTrail -> CloudWatch Logs delivery |
-| SNS topic | Management | Security alert notifications (KMS encrypted) |
-| Metric filters + alarms | Management | Unauthorized API, root usage, MFA-less sign-in |
-| EventBridge rules | Management | GuardDuty + SecurityHub high/critical findings |
 
 ## Provider Configuration
 
