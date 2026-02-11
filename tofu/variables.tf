@@ -1,10 +1,15 @@
-variable "project_name" {
-  description = "Project name for resource naming"
+variable "organization_id" {
+  description = "The ID of the AWS Organization"
   type        = string
 }
 
-variable "environment" {
-  description = "Environment name (e.g., dev, staging, prod)"
+variable "management_account_id" {
+  description = "The account ID of the management account"
+  type        = string
+}
+
+variable "security_audit_account_id" {
+  description = "The account ID of the security-audit account"
   type        = string
 }
 
@@ -13,8 +18,13 @@ variable "aws_region" {
   type        = string
 }
 
-variable "tags" {
-  description = "Additional tags to apply to all resources"
-  type        = map(string)
-  default     = {}
+variable "state_bucket_name" {
+  description = "S3 bucket name for state backend (monitored by CloudTrail)"
+  type        = string
+}
+
+variable "budget_alert_email" {
+  description = "Email address for security alert notifications"
+  type        = string
+  sensitive   = true
 }

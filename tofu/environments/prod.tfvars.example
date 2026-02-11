@@ -1,9 +1,0 @@
-# Production environment variables
-#
-# Copy this file and encrypt with SOPS:
-#   cp prod.tfvars.example prod.tfvars
-#   task sops:encrypt ENV=prod
-
-project_name = "my-project"
-environment  = "prod"
-aws_region   = "eu-west-1"
