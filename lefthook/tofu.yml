@@ -1,0 +1,12 @@
+pre-commit:
+  parallel: true
+  commands:
+    tofu-fmt:
+      glob: "**/*.tf"
+      run: tofu -chdir=tofu fmt -check -recursive
+      fail_text: "tofu fmt found unformatted files"
+
+    tflint:
+      glob: "**/*.tf"
+      run: tflint --init && tflint --chdir=tofu --config="$PWD/.tflint.hcl" --recursive
+      fail_text: "tflint found issues"

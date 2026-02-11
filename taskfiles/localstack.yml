@@ -1,0 +1,35 @@
+version: '3'
+
+tasks:
+  up:
+    desc: Start LocalStack
+    cmds:
+      - docker compose up -d
+      - task: wait
+
+  wait:
+    desc: Wait for LocalStack to be ready
+    cmds:
+      - echo "Waiting for LocalStack..."
+      - |
+        timeout=60
+        elapsed=0
+        until curl -sf http://localhost:4566/_localstack/health > /dev/null 2>&1; do
+          if [ $elapsed -ge $timeout ]; then
+            echo "ERROR: LocalStack failed to become ready within ${timeout}s"
+            exit 1
+          fi
+          sleep 2
+          elapsed=$((elapsed + 2))
+        done
+      - echo "LocalStack is ready"
+
+  down:
+    desc: Stop LocalStack
+    cmds:
+      - docker compose down
+
+  logs:
+    desc: Show LocalStack logs
+    cmds:
+      - docker compose logs -f localstack

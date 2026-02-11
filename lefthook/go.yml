@@ -1,0 +1,60 @@
+pre-commit:
+  commands:
+    mod-tidy:
+      glob: "**/*.go"
+      run: cd test && go mod tidy && git diff --exit-code go.mod go.sum
+      fail_text: "go mod tidy made changes"
+
+    fmt:
+      glob: "**/*.go"
+      run: cd test && gofmt -l . && test -z "$(gofmt -l .)"
+      fail_text: "gofmt found unformatted files"
+
+    vet:
+      glob: "**/*.go"
+      run: cd test && go vet ./...
+      fail_text: "go vet found issues"
+
+    lint:
+      glob: "**/*.go"
+      run: (test -f custom-gcl || golangci-lint custom) && cd test && ../custom-gcl run --new-from-rev=HEAD ./...
+      fail_text: "golangci-lint found issues"
+
+    file-length:
+      glob: "**/*.go"
+      shell: bash
+      run: |
+        MAX_LINES=120
+        VIOLATIONS=""
+        for f in {staged_files}; do
+          case "$f" in *_test.go|*/mocks/*) continue;; esac
+          lines=$(wc -l < "$f" 2>/dev/null || echo 0)
+          if [ "$lines" -gt "$MAX_LINES" ]; then
+            VIOLATIONS="${VIOLATIONS}${f}: ${lines} lines (max ${MAX_LINES})\n"
+          fi
+        done
+        if [ -n "$VIOLATIONS" ]; then
+          printf '%b' "$VIOLATIONS"
+          exit 1
+        fi
+      fail_text: "source files must be ≤120 lines (tests excluded)"
+
+    security:
+      glob: "**/*.go"
+      run: cd test && gosec -quiet ./...
+      fail_text: "gosec found security issues"
+
+    test:
+      glob: "**/*.go"
+      run: cd test && go test -short ./...
+      fail_text: "tests failed"
+
+pre-push:
+  commands:
+    full-lint:
+      run: (test -f custom-gcl || golangci-lint custom) && cd test && ../custom-gcl run ./...
+      fail_text: "full lint failed"
+
+    vulncheck:
+      run: cd test && govulncheck ./...
+      fail_text: "known vulnerabilities found"

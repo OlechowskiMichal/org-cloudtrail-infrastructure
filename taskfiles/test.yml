@@ -1,0 +1,57 @@
+version: '3'
+
+vars:
+  GO: go
+
+tasks:
+  default:
+    desc: Run all tests (starts LocalStack automatically)
+    cmds:
+      - |
+        set -euo pipefail
+        task :localstack:up
+        trap 'task :localstack:down' EXIT
+        task :test:integration
+
+  unit:
+    desc: Run unit tests only
+    dir: test
+    cmds:
+      - "{{.GO}} test -v -short ./..."
+
+  integration:
+    desc: Run integration tests (requires LocalStack)
+    dir: test
+    env:
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_ENDPOINT_URL: http://localhost:4566
+    cmds:
+      - "{{.GO}} test -v -timeout 30m ./..."
+
+  e2e:
+    desc: Run e2e tests against real AWS (requires valid AWS credentials)
+    dir: test
+    preconditions:
+      - sh: "aws sts get-caller-identity > /dev/null 2>&1"
+        msg: "Valid AWS credentials required"
+    env:
+      AWS_DEFAULT_REGION: us-east-1
+    cmds:
+      - "{{.GO}} test -v -tags e2e -timeout 30m -run TestE2E ./..."
+
+  e2e:cleanup:
+    desc: Remove orphaned e2e resources from AWS
+    preconditions:
+      - sh: "aws sts get-caller-identity > /dev/null 2>&1"
+        msg: "Valid AWS credentials required"
+    env:
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_PAGER: ""
+    cmds:
+      - |
+        echo "Searching for orphaned e2e resources..."
+        echo "TODO: Implement cleanup for your specific AWS resources here."
+        echo "Example: delete S3 buckets and DynamoDB tables matching your e2e prefix."
+        echo "See .github/workflows/e2e-cleanup.yml for the CI version."

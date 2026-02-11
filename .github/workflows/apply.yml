@@ -1,0 +1,71 @@
+name: 'OpenTofu Apply'
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "apply" to confirm infrastructure changes'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write  # Required for AWS OIDC authentication
+
+concurrency:
+  group: tofu-apply
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    name: Apply Infrastructure Changes
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 45
+    if: github.event.inputs.confirm == 'apply'
+    environment: production
+
+    steps:
+      - name: Setup
+        uses: OlechowskiMichal/ci-shared/actions/setup/mise@v1
+        with:
+          mise-env: ci
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: us-east-1
+
+      - name: Verify Branch
+        timeout-minutes: 1
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: mise exec -- task ci:verify:branch
+
+      - name: Tofu Init
+        timeout-minutes: 5
+        uses: OlechowskiMichal/ci-shared/actions/tofu/init@v1
+
+      - name: Tofu Plan
+        id: plan
+        timeout-minutes: 10
+        uses: OlechowskiMichal/ci-shared/actions/tofu/plan@v1
+
+      - name: Conftest Policy Check
+        timeout-minutes: 5
+        uses: OlechowskiMichal/ci-shared/actions/tofu/policy@v1
+        with:
+          plan-json: ${{ steps.plan.outputs.plan-json }}
+
+      - name: Tofu Apply
+        timeout-minutes: 30
+        uses: OlechowskiMichal/ci-shared/actions/tofu/apply@v1
+        with:
+          plan-file: ${{ steps.plan.outputs.plan-file }}
+
+      - name: Apply Summary
+        timeout-minutes: 1
+        env:
+          BRANCH: ${{ github.ref_name }}
+          ACTOR: ${{ github.actor }}
+        run: mise exec -- task ci:apply:summary

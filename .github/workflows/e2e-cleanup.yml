@@ -1,0 +1,54 @@
+name: 'E2E Resource Cleanup'
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Daily at midnight UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: e2e-cleanup
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    name: Prune Orphaned E2E Resources
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 15
+
+    steps:
+      - name: Setup
+        uses: OlechowskiMichal/ci-shared/actions/setup/mise@v1
+        with:
+          mise-env: ci
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: us-east-1
+
+      - name: Cleanup S3 Buckets
+        timeout-minutes: 5
+        uses: OlechowskiMichal/ci-shared/actions/aws/cleanup-s3@v1
+        with:
+          prefix: e2e-infrastructure-aws-template-
+
+      - name: Cleanup DynamoDB Tables
+        timeout-minutes: 5
+        uses: OlechowskiMichal/ci-shared/actions/aws/cleanup-dynamodb@v1
+        with:
+          prefix: e2e-infrastructure-aws-template-
+
+      - name: Cleanup Summary
+        timeout-minutes: 1
+        run: |
+          {
+            echo "### E2E Resource Cleanup Complete"
+            echo "- Region: us-east-1"
+            echo "- Prefix: e2e-infrastructure-aws-template-"
+            echo "- Timestamp: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          } >> "$GITHUB_STEP_SUMMARY"

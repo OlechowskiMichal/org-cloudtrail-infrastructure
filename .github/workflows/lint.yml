@@ -1,0 +1,53 @@
+name: Lint
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+      - 'tofu/**/*.tf'
+      - 'tofu/**/*.yml'
+      - 'tofu/**/*.yaml'
+      - '**/*.md'
+      - 'test/**/*.go'
+      - '.golangci.yml'
+      - '.custom-gcl.yml'
+      - '.actionlint.yml'
+      - '.yamllint.yml'
+      - '.tflint.hcl'
+      - '.markdownlint-cli2.jsonc'
+      - '.mise.toml'
+      - '.mise.ci.toml'
+  push:
+    branches:
+      - main
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: [self-hosted, macOS, ARM64]
+    steps:
+      - name: Setup
+        uses: OlechowskiMichal/ci-shared/actions/setup/mise@v1
+        with:
+          mise-env: ci
+
+      - name: Lint workflows
+        run: mise exec -- task lint:actionlint
+
+      - name: Lint YAML files
+        run: mise exec -- task lint:yamllint
+
+      - name: Lint OpenTofu files
+        run: mise exec -- task tofu:fmt:check
+
+      - name: Run tflint
+        run: mise exec -- task tofu:tflint
+
+      - name: Lint Markdown files
+        run: mise exec -- task lint:markdownlint
+
+      - name: Build custom golangci-lint
+        run: mise exec -- task lint:go:build
+
+      - name: Lint Go files
+        run: mise exec -- task lint:go

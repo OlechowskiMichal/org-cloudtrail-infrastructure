@@ -1,0 +1,20 @@
+# Base tool versions — shared across all environments
+# IaC tools pinned to major versions to avoid breaking changes.
+# Utility tools use "latest" to keep templates current.
+[tools]
+go = "1.23"
+golangci-lint = "1.62"
+opentofu = "1.9"
+opa = "1"
+conftest = "latest"
+task = "3"
+actionlint = "latest"
+yamllint = "latest"
+markdownlint-cli2 = "latest"
+sops = "latest"
+age = "latest"
+jq = "latest"
+tflint = "latest"
+
+[env]
+GOFLAGS = "-buildvcs=false"

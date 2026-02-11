@@ -1,0 +1,4 @@
+version: v2.5.0
+plugins:
+  - module: 'github.com/OlechowskiMichal/golangci-lint-filelength'
+    version: v0.1.0

@@ -1,0 +1,47 @@
+# OpenTofu / Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+plan.json
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# SOPS — decrypted tfvars should never be committed
+*.tfvars.decrypted
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (commitlint)
+node_modules/
+package-lock.json
+
+# Go
+vendor/
+*.test
+*.out
+coverage.html
+
+# LocalStack
+.localstack/
+
+# Secrets
+*.pem
+*.key
+.env
+credentials*
+
+# Conftest — policies pulled at runtime
+policy/

@@ -1,0 +1,7 @@
+extends:
+  - lefthook/files.yml
+  - lefthook/tofu.yml
+  - lefthook/lint.yml
+  - lefthook/commit-msg.yml
+  - lefthook/secrets.yml
+  - lefthook/go.yml

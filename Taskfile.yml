@@ -1,0 +1,24 @@
+---
+version: '3'
+
+includes:
+  setup:
+    taskfile: ./taskfiles/setup.yml
+  tofu:
+    taskfile: ./taskfiles/tofu.yml
+  lint:
+    taskfile: ./taskfiles/lint.yml
+  test:
+    taskfile: ./taskfiles/test.yml
+  localstack:
+    taskfile: ./taskfiles/localstack.yml
+  sops:
+    taskfile: ./taskfiles/sops.yml
+  ci:
+    taskfile: ./taskfiles/ci.yml
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list

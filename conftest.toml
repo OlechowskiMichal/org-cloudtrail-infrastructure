@@ -1,0 +1,4 @@
+# Policy source for Conftest. Update the URL to point to your own policy repository.
+update = ["git::ssh://git@github.com/OlechowskiMichal/opa-policies.git//policy"]
+no-color = true
+quiet = true

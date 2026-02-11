@@ -1,0 +1,104 @@
+---
+version: '3'
+
+tasks:
+  validate:
+    desc: Run all CI validation checks
+    cmds:
+      - task: :tofu:fmt:check
+      - task: :tofu:validate
+      - task: :tofu:tflint:all
+
+  test:
+    desc: Run all tests (for CI)
+    cmds:
+      - task: validate
+      - task: :lint:go
+      - task: :test:default
+
+  plan:
+    desc: Run plan with CI output capture
+    cmds:
+      - cmd: |
+          set -euo pipefail
+          task --silent tofu:plan 2>&1 | tee tofu/plan.txt
+          task --silent tofu:plan:json
+          max_chars=60000
+          plan_snippet=$(head -c "$max_chars" tofu/plan.txt)
+          if [ "$(wc -c < tofu/plan.txt)" -gt "$max_chars" ]; then
+            plan_snippet="${plan_snippet}"$'\n...truncated...'
+          fi
+          if [ -n "${GITHUB_OUTPUT:-}" ]; then
+            {
+              echo "plan<<EOF"
+              printf '%s\n' "$plan_snippet"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+  policy:
+    desc: Run conftest with CI output capture
+    cmds:
+      - cmd: |
+          set -euo pipefail
+          conftest update
+          conftest_output=$(conftest test tofu/plan.json 2>&1) && conftest_exit=0 || conftest_exit=$?
+          if [ "$conftest_exit" -ne 0 ]; then
+            if [ -n "${GITHUB_OUTPUT:-}" ]; then
+              {
+                echo "policy_violations<<EOF"
+                echo "$conftest_output"
+                echo "EOF"
+                echo "has_violations=true"
+              } >> "$GITHUB_OUTPUT"
+            fi
+          else
+            if [ -n "${GITHUB_OUTPUT:-}" ]; then
+              echo "has_violations=false" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+          echo "$conftest_output"
+
+  policy:fail:
+    desc: Fail on policy violations
+    cmds:
+      - cmd: |
+          echo "::error::Conftest policy violations detected"
+          echo "${POLICY_VIOLATIONS:-}"
+          exit 1
+
+  plan:summary:
+    desc: Write plan summary to GITHUB_STEP_SUMMARY
+    cmds:
+      - cmd: |
+          set -euo pipefail
+          summary_file="${GITHUB_STEP_SUMMARY:-/dev/stdout}"
+          {
+            echo "### OpenTofu Plan Complete"
+            echo "- Format: ${FMT_OUTCOME:-unknown}"
+            echo "- Init: ${INIT_OUTCOME:-unknown}"
+            echo "- Validate: ${VALIDATE_OUTCOME:-unknown}"
+            echo "- Plan: ${PLAN_OUTCOME:-unknown}"
+            echo "- Conftest: ${POLICY_STATUS:-unknown}"
+          } >> "$summary_file"
+
+  apply:summary:
+    desc: Write apply summary to GITHUB_STEP_SUMMARY
+    cmds:
+      - cmd: |
+          summary_file="${GITHUB_STEP_SUMMARY:-/dev/stdout}"
+          {
+            echo "### OpenTofu Apply Complete"
+            echo "- Branch: ${BRANCH:-unknown}"
+            echo "- Triggered by: @${ACTOR:-unknown}"
+            echo "- Timestamp: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          } >> "$summary_file"
+
+  verify:branch:
+    desc: Verify current branch is main
+    cmds:
+      - cmd: |
+          if [ "${BRANCH:-}" != "main" ]; then
+            echo "::error::Apply can only run from main branch"
+            exit 1
+          fi

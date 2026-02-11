@@ -1,0 +1,113 @@
+version: "2"
+
+run:
+  timeout: 5m
+  go: "1.23"
+
+linters:
+  enable:
+    - bodyclose
+    - containedctx
+    - contextcheck
+    - copyloopvar
+    - cyclop
+    - decorder
+    - dogsled
+    - durationcheck
+    - exhaustive
+    - exhaustruct
+    - funlen
+    - gochecknoglobals
+    - gochecknoinits
+    - godox
+    - gocritic
+    - gosec
+    - govet
+    - ireturn
+    - lll
+    - makezero
+    - misspell
+    - nakedret
+    - nilerr
+    - nilnil
+    - noctx
+    - nonamedreturns
+    - nosprintfhostport
+    - prealloc
+    - predeclared
+    - revive
+    - staticcheck
+    - thelper
+    - testifylint
+    - tparallel
+    - unconvert
+    - unparam
+    - wastedassign
+    - filelength
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - exhaustruct
+          - gochecknoglobals
+  settings:
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - performance
+      disabled-checks: []
+    cyclop:
+      max-complexity: 5
+    exhaustruct:
+      exclude:
+        - 'github\.com/aws/.*'
+    funlen:
+      lines: 30
+      statements: 15
+    gosec: {}
+    govet:
+      enable:
+        - shadow
+    lll:
+      line-length: 120
+    nakedret:
+      max-func-lines: 30
+    revive:
+      rules:
+        - name: deep-exit
+        - name: early-return
+        - name: blank-imports
+        - name: confusing-naming
+        - name: identical-branches
+        - name: unreachable-code
+        - name: modifies-value-receiver
+        - name: waitgroup-by-value
+        - name: time-equal
+        - name: range-val-address
+        - name: datarace
+        - name: exported
+          arguments:
+            - "checkPrivateReceivers"
+            - "sayRepetitiveInsteadOfStutters"
+        - name: package-comments
+    custom:
+      filelength:
+        type: module
+        description: Enforces maximum file line counts.
+        original-url: github.com/OlechowskiMichal/golangci-lint-filelength
+        settings:
+          maxLines: 120
+          excludeTests: true
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/OlechowskiMichal/infrastructure-aws-template
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

@@ -1,0 +1,98 @@
+---
+version: '3'
+
+vars:
+  TOFU: tofu
+  TFLINT: tflint
+
+tasks:
+  fmt:
+    desc: Format all OpenTofu files
+    cmds:
+      - "{{.TOFU}} -chdir=tofu fmt -recursive"
+
+  fmt:check:
+    desc: Check OpenTofu formatting
+    cmds:
+      - "{{.TOFU}} -chdir=tofu fmt -check -recursive"
+
+  init:
+    desc: Initialize OpenTofu with backend
+    cmds:
+      - "{{.TOFU}} -chdir=tofu init"
+
+  init:local:
+    desc: Initialize OpenTofu without backend (for local validation)
+    cmds:
+      - "{{.TOFU}} -chdir=tofu init -backend=false"
+
+  validate:only:
+    desc: Validate OpenTofu configuration (requires prior init)
+    cmds:
+      - "{{.TOFU}} -chdir=tofu validate"
+
+  validate:
+    desc: Initialize and validate OpenTofu configuration
+    cmds:
+      - task: init:local
+      - task: validate:only
+
+  tflint:
+    desc: Run tflint on OpenTofu files
+    cmds:
+      - "{{.TFLINT}} --init"
+      - "{{.TFLINT}} --chdir=tofu --config=$PWD/.tflint.hcl --recursive"
+
+  tflint:all:
+    desc: Run all linters (tflint + actionlint + yamllint + markdownlint + fmt)
+    cmds:
+      - task: tflint
+      - task: fmt:check
+      - task: :lint:actionlint
+      - task: :lint:yamllint
+      - task: :lint:markdownlint
+
+  plan:
+    desc: Create OpenTofu plan
+    cmds:
+      - "{{.TOFU}} -chdir=tofu plan -no-color -out=plan.tfplan"
+
+  plan:show:
+    desc: Show human-readable plan output
+    cmds:
+      - "{{.TOFU}} -chdir=tofu show -no-color plan.tfplan"
+
+  plan:json:
+    desc: Export plan as JSON for policy checks
+    cmds:
+      - "{{.TOFU}} -chdir=tofu show -json plan.tfplan > tofu/plan.json"
+
+  plan:full:
+    desc: Create plan, show, and export JSON
+    cmds:
+      - task: plan
+      - task: plan:show
+      - task: plan:json
+
+  apply:
+    desc: Apply OpenTofu plan
+    cmds:
+      - "{{.TOFU}} -chdir=tofu apply -input=false -auto-approve plan.tfplan"
+
+  policy:
+    desc: Run OPA policy checks against plan
+    preconditions:
+      - test -f tofu/plan.json
+    cmds:
+      - conftest update
+      - conftest test tofu/plan.json
+
+  clean:
+    desc: Remove generated files
+    cmds:
+      - rm -rf tofu/.terraform
+      - rm -f tofu/.terraform.lock.hcl
+      - rm -f tofu/plan.tfplan
+      - rm -f tofu/plan.json
+      - rm -f tofu/plan.txt
+      - rm -f tofu/*.tfstate*

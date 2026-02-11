@@ -1,0 +1,45 @@
+---
+version: '3'
+
+# SOPS + AGE secrets management
+#
+# Setup:
+#   1. Generate an AGE keypair:  age-keygen -o key.txt
+#   2. Put the public key in .sops.yaml
+#   3. Store the private key in AWS SSM Parameter Store
+#   4. Export the private key locally:
+#
+#      export SOPS_AGE_KEY=$(aws ssm get-parameter \
+#        --name "/YOUR-PROJECT/sops-age-key" \
+#        --with-decryption --query "Parameter.Value" --output text)
+
+tasks:
+  decrypt:
+    desc: Decrypt environment tfvars
+    requires:
+      vars: [ENV]
+    cmds:
+      - >-
+        sops --decrypt
+        tofu/environments/{{.ENV}}.tfvars
+        > tofu/environments/{{.ENV}}.tfvars.decrypted
+    status:
+      - test -f tofu/environments/{{.ENV}}.tfvars.decrypted
+
+  encrypt:
+    desc: Encrypt environment tfvars
+    requires:
+      vars: [ENV]
+    cmds:
+      - >-
+        sops --encrypt
+        tofu/environments/{{.ENV}}.tfvars.decrypted
+        > tofu/environments/{{.ENV}}.tfvars.tmp
+        && mv tofu/environments/{{.ENV}}.tfvars.tmp tofu/environments/{{.ENV}}.tfvars
+
+  edit:
+    desc: Decrypt, edit, and re-encrypt environment tfvars
+    requires:
+      vars: [ENV]
+    cmds:
+      - sops tofu/environments/{{.ENV}}.tfvars

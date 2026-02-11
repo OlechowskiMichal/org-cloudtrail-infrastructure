@@ -1,0 +1,37 @@
+---
+version: '3'
+
+tasks:
+  actionlint:
+    desc: Lint GitHub Actions workflows
+    cmds:
+      - actionlint -color -oneline
+
+  yamllint:
+    desc: Lint YAML files
+    cmds:
+      - yamllint --strict .
+
+  markdownlint:
+    desc: Lint Markdown files
+    cmds:
+      - markdownlint-cli2 "**/*.md" "!node_modules"
+
+  go:build:
+    desc: Build custom golangci-lint with plugins
+    cmds:
+      - test -f test/go.mod || exit 0 && golangci-lint custom
+    status:
+      - test -f custom-gcl
+
+  go:
+    desc: Run golangci-lint on Go files
+    deps: [go:build]
+    cmds:
+      - test -f test/go.mod || exit 0 && cd test && ../custom-gcl run ./...
+
+  go:fix:
+    desc: Run golangci-lint with auto-fix
+    deps: [go:build]
+    cmds:
+      - test -f test/go.mod || exit 0 && cd test && ../custom-gcl run --fix ./...

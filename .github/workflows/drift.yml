@@ -1,0 +1,54 @@
+name: 'Drift Detection'
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Daily at midnight UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+concurrency:
+  group: drift-detection
+  cancel-in-progress: false
+
+jobs:
+  detect_drift:
+    name: Detect Infrastructure Drift
+    uses: ./.github/workflows/plan.yml
+    secrets: inherit
+
+  notify_drift:
+    name: Notify on Drift Detection
+    runs-on: [self-hosted, macOS, ARM64]
+    needs: detect_drift
+    if: always()
+    timeout-minutes: 10
+    steps:
+      - name: Download Plan Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: tofu-plan
+        continue-on-error: true
+
+      - name: Read Plan JSON
+        id: read-plan
+        run: |
+          if [ -f "plan.json" ]; then
+            {
+              echo "plan-json<<PLAN_JSON_EOF"
+              cat plan.json
+              echo "PLAN_JSON_EOF"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Analyze Drift
+        id: drift
+        uses: OlechowskiMichal/ci-shared/actions/tofu/analyze-drift@v1
+        with:
+          plan-json: ${{ steps.read-plan.outputs.plan-json }}
+
+      - name: Write Drift Summary
+        run: echo "${{ steps.drift.outputs.drift-summary }}" >> "$GITHUB_STEP_SUMMARY"

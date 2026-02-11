@@ -1,0 +1,15 @@
+# SOPS encryption configuration
+#
+# Setup:
+#   1. Generate an AGE keypair:  age-keygen -o key.txt
+#   2. Replace the placeholder public key below with your key
+#   3. Store the private key securely:
+#      - AWS: SSM Parameter Store or Secrets Manager
+#
+# Usage:
+#   task sops:encrypt ENV=dev
+#   task sops:decrypt ENV=dev
+#   task sops:edit ENV=dev
+creation_rules:
+  - path_regex: \.tfvars$
+    age: "age1REPLACE_WITH_YOUR_AGE_PUBLIC_KEY"

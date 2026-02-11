@@ -1,0 +1,9 @@
+# Development profile — additional tools for local work
+[tools]
+lefthook = "1.13"
+"go:golang.org/x/vuln/cmd/govulncheck" = "latest"
+"go:github.com/securego/gosec/v2/cmd/gosec" = "latest"
+node = "22"
+gitleaks = "latest"
+yq = "latest"
+awscli = "latest"
