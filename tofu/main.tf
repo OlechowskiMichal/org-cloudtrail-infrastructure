@@ -26,11 +26,3 @@ module "bucket" {
   management_account_id     = var.management_account_id
   organization_id           = var.organization_id
 }
-
-module "alerting" {
-  source = "./modules/alerting"
-
-  kms_key_id                = module.trail.kms_key_id
-  cloudwatch_log_group_name = module.trail.cloudwatch_log_group_name
-  budget_alert_email        = var.budget_alert_email
-}
