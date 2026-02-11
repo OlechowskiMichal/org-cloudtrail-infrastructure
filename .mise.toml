@@ -15,6 +15,7 @@ sops = "latest"
 age = "latest"
 jq = "latest"
 tflint = "latest"
+trivy = "latest"
 
 [env]
 GOFLAGS = "-buildvcs=false"

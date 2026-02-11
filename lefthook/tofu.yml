@@ -10,3 +10,8 @@ pre-commit:
       glob: "**/*.tf"
       run: tflint --init && tflint --chdir=tofu --config="$PWD/.tflint.hcl" --recursive
       fail_text: "tflint found issues"
+
+    trivy:
+      glob: "**/*.tf"
+      run: trivy config tofu/ --severity HIGH,CRITICAL --exit-code 1
+      fail_text: "trivy found security issues in OpenTofu configuration"

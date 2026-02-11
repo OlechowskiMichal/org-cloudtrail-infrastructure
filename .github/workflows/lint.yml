@@ -43,6 +43,9 @@ jobs:
       - name: Run tflint
         run: mise exec -- task tofu:tflint
 
+      - name: Scan infrastructure with Trivy
+        run: mise exec -- task tofu:trivy
+
       - name: Lint Markdown files
         run: mise exec -- task lint:markdownlint
 
