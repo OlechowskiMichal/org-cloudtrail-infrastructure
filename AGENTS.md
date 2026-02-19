@@ -1,4 +1,4 @@
-# Agent Instructions: org-cloudtrail
+# Agent Instructions: org-aws-cloudtrail
 
 ## Overview
 
